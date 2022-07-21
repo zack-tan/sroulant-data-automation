@@ -8,11 +8,14 @@ from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.chrome.options import Options
+from collections import defaultdict
+
+import pandas as pd
 
 # Initialization
 BASE_URL = r"https://sous-chef.office.santropolroulant.org/p/login?next=/"
-USERNAME_SC = r'xx'
-PASSWORD_SC = r'xx'
+USERNAME_SC = r'x'
+PASSWORD_SC = r'x'
 month = r'June 2022'
 
 results = []
@@ -85,11 +88,11 @@ if __name__ == '__main__':
     x = driver.find_elements_by_xpath(r"//a[contains (@href, '/billing/view/')]")
     y = driver.find_elements_by_xpath(r"//a[contains (@href, '/billing/view/')]//preceding::strong")
     
-    # Remove first 2 elements of label list WebElements
+    # Remove first 2 elements of label list - Those are elements elsewhere in the table
     y = y[2:]
 
     # Simply use the latest one
-    # x[0].click()
+    x[0].click()
 
     '''
     # TODO: Reverse both lists to allow for easier estimation
@@ -113,11 +116,42 @@ if __name__ == '__main__':
 
     # rows[0] is always the table headers -> NEW CLIENT NAME DELIVERY STATUS PAYMENT METHOD PRICE SCALE ....
     # rows[1] is always the subheaders -> Regular Large
+    rows = rows[2:]
+
     # Other data format as follows:
     # '<lastname>, <firstname> <Episodic/Ongoing> ---- <Low income / blank> <n_orders> <n_regmeals / blank> <n_largemeals / blank> <n_extra / blank> <Total_amt_in_dollars>'
 
     # TODO: Run for loop and extract td elements
-    cells = rows[0].find_elements_by_tag_name('td')
+
+    #client_info = dict.fromkeys(['name', 'delivery_status', 'payment_method', 'price_scale', 'n_orders', 'meals_reg', 'meals_large', 'meals_extra', 'total'], [])
+    client_info = defaultdict(list)
+
+    for i, entry in enumerate(rows):
+        cells = entry.find_elements_by_tag_name('td')
+        
+        # Skip anything that isn't data
+        if len(cells) < 11:
+            continue
+        
+        client_info['name'].append(cells[1].text)
+        client_info['delivery_status'].append(cells[2].text)
+        # client_info.setdefault('name').append(cells[1].text)
+        # client_info.setdefault('delivery_status').append(cells[2].text)
+        client_info['payment_method'].append(cells[3].text)
+        client_info['price_scale'].append(cells[4].text)
+        client_info['n_orders'].append(cells[5].text)
+        client_info['meals_reg'].append(cells[6].text)
+        client_info['meals_large'].append(cells[7].text)
+        client_info['meals_extra'].append(cells[8].text)
+        client_info['total'].append(cells[9].text)
+
+        # TODO: Print please wait or counter
+        print(f"Processed {i} out of {len(rows)} rows.")
+    
+    # Close Selenium 
+    driver.quit()
+
+    ### PANDAS PROCESSING HERE    
 
     ''' td cell references
     0 - blank
