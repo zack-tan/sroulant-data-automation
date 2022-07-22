@@ -1,3 +1,9 @@
+""" Airtable Monthly Meals Table Update Script
+Developed by Zack Tan (https://bit.ly/github-zack) for Santropol Roulant 
+
+This script reads in a scraped extract from a Sous-Chef billing page then writes the result into Airtable.
+
+"""
 import pyairtable as pyat
 from pyairtable import Api, Base, Table
 from pyairtable import formulas as fm
@@ -13,19 +19,15 @@ if __name__ == '__main__':
     # base.all('table_name')
 
     # Read in data to import
-    df = pd.read_csv("latest_month_cleaned.csv")
+    df = pd.read_csv("2021_December_cleaned.csv")
 
     # Initialize Airtable API connector
     table = Table(API_KEY, BASE_ID, 'Client_Count_Monthly')
+    # table = Table(API_KEY, BASE_ID, 'Client_Count_Monthly_2021')
 
-    # Get the month from df
-    month = df.month.iloc[0]
+    print("\nConnected to Airtable.")
+
     '''
-    # Store Airtable IDs of retrieved records
-    y = []
-    for z in x:
-        y.append(z.get('id'))
-        
     # Retrieve records that match given condition
     x = table.all(formula = fm.match({'MONTH': month}))
     '''
@@ -46,3 +48,5 @@ if __name__ == '__main__':
         })
 
         print(f"Wrote {i+1} out of {len(df)} records")
+    
+    input("Finished writing to Airtable. Press Enter to finish.")
