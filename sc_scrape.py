@@ -14,9 +14,9 @@ import pandas as pd
 
 # Initialization
 BASE_URL = r"https://sous-chef.office.santropolroulant.org/p/login?next=/"
-USERNAME_SC = r'x'
-PASSWORD_SC = r'x'
-month = r'June 2022'
+USERNAME_SC = r'xx'
+PASSWORD_SC = r'xx'
+month = r'January'
 
 results = []
 
@@ -90,11 +90,14 @@ if __name__ == '__main__':
     
     # Remove first 2 elements of label list - Those are elements elsewhere in the table
     y = y[2:]
-    month = y[0].text.split()[0]        # Keep corresponding month label
+
+    
+    # Store corresponding month label
+    month = y[0].text.split()[0]        
 
     # Use latest month
     x[0].click()
-
+    
 
     '''
     # TODO: Reverse both lists to allow for easier estimation
@@ -112,18 +115,17 @@ if __name__ == '__main__':
     ### INDIVIDUAL MONTH BILLING PAGE
 
     # TODO: Some kind of wait for load
+    WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, r"sc_bs")))
 
     table_data = driver.find_element_by_id(r"sc_bs")
     rows = table_data.find_elements_by_tag_name('tr')
 
-    # rows[0] is always the table headers -> NEW CLIENT NAME DELIVERY STATUS PAYMENT METHOD PRICE SCALE ....
-    # rows[1] is always the subheaders -> Regular Large
+    # rows[0] is always the table headers -> "NEW CLIENT NAME DELIVERY STATUS PAYMENT METHOD PRICE SCALE ...."
+    # rows[1] is always the subheaders -> "Regular Large"
     rows = rows[2:]
 
     # Other data format as follows:
     # '<lastname>, <firstname> <Episodic/Ongoing> ---- <Low income / blank> <n_orders> <n_regmeals / blank> <n_largemeals / blank> <n_extra / blank> <Total_amt_in_dollars>'
-
-    # TODO: Run for loop and extract td elements
 
     #client_info = dict.fromkeys(['name', 'delivery_status', 'payment_method', 'price_scale', 'n_orders', 'meals_reg', 'meals_large', 'meals_extra', 'total'], [])
     client_info = defaultdict(list)
@@ -142,6 +144,7 @@ if __name__ == '__main__':
     10 - blank
     '''
 
+    count = 0
     for i, entry in enumerate(rows):
         cells = entry.find_elements_by_tag_name('td')
         
@@ -161,8 +164,8 @@ if __name__ == '__main__':
         client_info['meals_extra'].append(cells[8].text)
         client_info['total'].append(cells[9].text)
 
-        # TODO: Print please wait or counter
-        print(f"Processed {i} out of {len(rows)} rows.")
+        count += 1
+        print(f"Processed {count} rows.")
     
     # Close Selenium 
     driver.quit()
@@ -188,5 +191,7 @@ if __name__ == '__main__':
     # @Laura: What do you want to do with '----' in Payment Method?
 
     # Export out to csv for further processing
-    df.to_csv("latest_month_cleaned.csv",index=False)
+    df.to_csv(f"2021_{month}_cleaned.csv",index=False)
+
+    print(f"Scraping complete for {month}.")
     
