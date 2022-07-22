@@ -90,9 +90,11 @@ if __name__ == '__main__':
     
     # Remove first 2 elements of label list - Those are elements elsewhere in the table
     y = y[2:]
+    month = y[0].text.split()[0]        # Keep corresponding month label
 
-    # Simply use the latest one
+    # Use latest month
     x[0].click()
+
 
     '''
     # TODO: Reverse both lists to allow for easier estimation
@@ -180,11 +182,11 @@ if __name__ == '__main__':
     
     df['total'] = df['total'].astype(float)
 
-    df.to_csv("latest_month_cleaned.csv",index=False)
-    
+    # Insert new column corresponding to month
+    df.insert(1, 'month', month)
+
     # @Laura: What do you want to do with '----' in Payment Method?
 
-
-    
-    pass
+    # Export out to csv for further processing
+    df.to_csv("latest_month_cleaned.csv",index=False)
     
