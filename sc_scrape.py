@@ -1,5 +1,8 @@
-import time
-import random
+""" Sous-Chef Billing Data Web Scraper 
+Developed by Zack Tan (https://bit.ly/linkedin-zacktan) for Santropol Roulant, 2022
+
+This script uses Selenium to traverse the Sous-Chef platform (https://github.com/savoirfairelinux/sous-chef) and retrieve billing details for the most recent month.
+"""
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium import webdriver
@@ -16,27 +19,22 @@ import pandas as pd
 BASE_URL = r"https://sous-chef.office.santropolroulant.org/p/login?next=/"
 USERNAME_SC = r'xx'
 PASSWORD_SC = r'xx'
-month = r'January'
+month = r'-'
 
-results = []
+print("\nThis script was built for Santropol Roulant and will log onto the Sous-Chef website and scrape meal data for the latest month.")
+print("Source code for the file can be found on github at: https://github.com/zack-tan/sroulant-sc_scraper-airtable-link")
 
-# Get WebDriver 
-# Start maximized
+input("\nPlease ensure you are logging in from the roulant or connected to the organization's VPN before continuing. Press Enter to continue.")
 
+# Get WebDriver and start maximized
 options = Options()
 options.add_argument("--start-maximized")
 
 driver = webdriver.Chrome(r'C:\Users\tanzc\chromedriver.exe', chrome_options=options)
 
-##### ENSURE CONNECTION TO VPN AND ABLE TO ACCESS SC NORMALLY #####
-
 if __name__ == '__main__':
 
-    # TODO: Prompt user to check if VPN is engaged
-    
     driver.get(BASE_URL)
-
-    # TODO: Check if already logged in
     
     WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, r"id_username")))
 
@@ -61,7 +59,6 @@ if __name__ == '__main__':
     actions.send_keys(Keys.RETURN)
     actions.perform()
 
-    # TODO: Check if dollar icon is visible. If screen is smaller, need to expand button first
 
     ### SC HOME PAGE
 
@@ -84,14 +81,13 @@ if __name__ == '__main__':
 
     # TODO: Some kind of wait for load
 
-    # Returns all clickable 'view' links that open the invoices
+    # Returns all clickable 'view' eyeball links that open the invoices
     x = driver.find_elements_by_xpath(r"//a[contains (@href, '/billing/view/')]")
     y = driver.find_elements_by_xpath(r"//a[contains (@href, '/billing/view/')]//preceding::strong")
     
     # Remove first 2 elements of label list - Those are elements elsewhere in the table
     y = y[2:]
-
-    
+   
     # Store corresponding month label
     month = y[0].text.split()[0]        
 
@@ -114,7 +110,6 @@ if __name__ == '__main__':
 
     ### INDIVIDUAL MONTH BILLING PAGE
 
-    # TODO: Some kind of wait for load
     WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, r"sc_bs")))
 
     table_data = driver.find_element_by_id(r"sc_bs")
@@ -165,10 +160,12 @@ if __name__ == '__main__':
         client_info['total'].append(cells[9].text)
 
         count += 1
-        print(f"Processed {count} rows.")
+        print(f"Scraped {count} rows.")
     
     # Close Selenium 
     driver.quit()
+
+    print("\nScraping completed. Processing data...")
 
     ### PANDAS PROCESSING HERE    
     df = pd.DataFrame.from_dict(client_info)
@@ -191,7 +188,7 @@ if __name__ == '__main__':
     # @Laura: What do you want to do with '----' in Payment Method?
 
     # Export out to csv for further processing
-    df.to_csv(f"2021_{month}_cleaned.csv",index=False)
+    df.to_csv(f"{month}_cleaned.csv",index=False)
 
-    print(f"Scraping complete for {month}.")
+    print(f"Data processed. File output: {month}_cleaned.csv.")
     
