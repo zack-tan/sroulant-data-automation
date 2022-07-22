@@ -125,6 +125,20 @@ if __name__ == '__main__':
 
     #client_info = dict.fromkeys(['name', 'delivery_status', 'payment_method', 'price_scale', 'n_orders', 'meals_reg', 'meals_large', 'meals_extra', 'total'], [])
     client_info = defaultdict(list)
+    
+    ''' td cell references
+    0 - blank
+    1 - lastname, firstname
+    2 - Ongoing / Episodic
+    3 - Payment method
+    4 - Low Income / blank
+    5 - No. orders
+    6 - Reg Meals
+    7 - Large Meals
+    8 - Extra Side Dishes
+    9 - Income
+    10 - blank
+    '''
 
     for i, entry in enumerate(rows):
         cells = entry.find_elements_by_tag_name('td')
@@ -152,20 +166,25 @@ if __name__ == '__main__':
     driver.quit()
 
     ### PANDAS PROCESSING HERE    
+    df = pd.DataFrame.from_dict(client_info)
 
-    ''' td cell references
-    0 - blank
-    1 - lastname, firstname
-    2 - Ongoing / Episodic
-    3 - Payment method
-    4 - Low Income / blank
-    5 - No. orders
-    6 - Reg Meals
-    7 - Large Meals
-    8 - Extra Side Dishes
-    9 - Income
-    10 - blank
-    '''
+    # Replace blank price scales with regular
+    df['price_scale'] = df['price_scale'].replace("", "Regular")
+    df['meals_reg'] = df['meals_reg'].replace('', 0)
+    df['meals_large'] = df['meals_large'].replace('', 0)
+    df['meals_extra'] = df['meals_extra'].replace('', 0)
 
-    # TODO:
+    # 2 methods to remove dollar sign from total - then convert to float type
+    #df['total'] = df['total'].apply(lambda x: x[1:]) 
+    df['total'] = df['total'].str[1:]
+    
+    df['total'] = df['total'].astype(float)
+
+    df.to_csv("latest_month_cleaned.csv",index=False)
+    
+    # @Laura: What do you want to do with '----' in Payment Method?
+
+
+    
     pass
+    
