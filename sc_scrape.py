@@ -1,5 +1,5 @@
 """ Sous-Chef Billing Data Web Scraper 
-Developed by Zack Tan (https://bit.ly/linkedin-zacktan) for Santropol Roulant, 2022
+Developed by Zack Tan (https://bit.ly/linkedin-zacktan) for Santropol Roulant
 
 This script uses Selenium to traverse the Sous-Chef platform (https://github.com/savoirfairelinux/sous-chef) and retrieve billing details for the most recent month.
 """
@@ -8,18 +8,24 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.chrome.options import Options
 from collections import defaultdict
-
+from pyairtable import Api, Base, Table
+from pyairtable import formulas as fm
 import pandas as pd
 
 # Initialization
 BASE_URL = r"https://sous-chef.office.santropolroulant.org/p/login?next=/"
-USERNAME_SC = r'xx'
-PASSWORD_SC = r'xx'
+USERNAME_SC = r'x'
+PASSWORD_SC = r'x'
 month = r'-'
+
+API_KEY = r'x'
+BASE_ID = r'x'
+BASE_NAME = r'(McGill) 2022 Clients data and meals data'
+#TABLE_NAME = r'Client_Count_Monthly_2022'
+TABLE_NAME = r'Client_Count_Monthly_2022'
 
 print("\nThis script was built for Santropol Roulant and will log onto the Sous-Chef website and scrape meal data for the latest month.")
 print("Source code for the file can be found on github at: https://github.com/zack-tan/sroulant-sc_scraper-airtable-link")
@@ -89,13 +95,18 @@ if __name__ == '__main__':
     y = y[2:]
    
     # Store corresponding month label
-    month = y[0].text.split()[0]        
+    month = y[0].text.split()[0]
 
     # Use latest month
     x[0].click()
     
-
     '''
+    # take month and year input from user
+    # combine into str
+    # search in dict
+    # click corresponding link
+    res = {y[i]: x[i] for i in range(len(y))}
+    
     # TODO: Reverse both lists to allow for easier estimation
     x.reverse()
     y.reverse()
@@ -181,14 +192,45 @@ if __name__ == '__main__':
     df['total'] = df['total'].str[1:]
     
     df['total'] = df['total'].astype(float)
+    df['n_orders'] = df['n_orders'].astype(int)
+    df['meals_reg'] = df['meals_reg'].astype(int)
+    df['meals_large'] = df['meals_large'].astype(int)
+    df['meals_extra'] = df['meals_extra'].astype(int)
 
     # Insert new column corresponding to month
     df.insert(1, 'month', month)
 
-    # @Laura: What do you want to do with '----' in Payment Method?
-
     # Export out to csv for further processing
     df.to_csv(f"{month}_cleaned.csv",index=False)
-
     print(f"Data processed. File output: {month}_cleaned.csv.")
     
+
+    ### CONNECT AND WRITE TO AIRTABLE
+    print("\nNow printing to Airtable...")
+
+    print(f"\nPaste Base ID to use and hit Enter. For more information, refer to: https://support.airtable.com/hc/en-us/articles/4405741487383-Understanding-Airtable-IDs")
+    base_id = input(fr"Alternatively, leave blank to use default '{BASE_NAME}': ")
+    
+    table_name = input(f"\nPlease specify table containing monthly client meal data. Leave blank to use default '{TABLE_NAME}': ")
+
+    if base_id == '':
+        base_id = BASE_ID
+    if table_name == '':
+        table_name = TABLE_NAME
+
+    print(f"\nConnecting to table {table_name} on Base ID {base_id} @ Airtable...")
+
+    table = Table(API_KEY, base_id, table_name)
+
+    print("\nSuccessfully connected.\nWriting to table...\n")
+
+    for i, row in df.iterrows():
+        table.create({ 'CLIENT NAME': row['name'], 'MONTH': row['month'], 'Delivery status': row['delivery_status'], 'Price scale': row['price_scale'],
+                        'Number of orders': row['n_orders'], 'Meals reg': row['meals_reg'], 'Meals large': row['meals_large'], 
+                        'Extra': row['meals_large'], 'Montant facture': row['total']
+        })
+
+        print(f"Wrote {i+1} out of {len(df)} records")
+
+    print("\nFinished writing to Airtable. If you wish to refresh the client aggregate table, please run the other script XXXXX.")
+    input("Press Enter to finish.")
