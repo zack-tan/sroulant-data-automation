@@ -2,6 +2,7 @@
 Developed by Zack Tan (https://bit.ly/linkedin-zacktan) for Santropol Roulant
 
 This script uses Selenium to traverse the Sous-Chef platform (https://github.com/savoirfairelinux/sous-chef) and retrieve billing details for the most recent month.
+It then writes these records into the Roulant's Airtable DB.
 """
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -17,18 +18,18 @@ import pandas as pd
 
 # Initialization
 BASE_URL = r"https://sous-chef.office.santropolroulant.org/p/login?next=/"
-USERNAME_SC = r'x'
-PASSWORD_SC = r'x'
+USERNAME_SC = r'xx'
+PASSWORD_SC = r'xx'
 month = r'-'
 
-API_KEY = r'x'
-BASE_ID = r'x'
+API_KEY = r'xx'
+BASE_ID = r'xx'
 BASE_NAME = r'(McGill) 2022 Clients data and meals data'
-#TABLE_NAME = r'Client_Count_Monthly_2022'
 TABLE_NAME = r'Client_Count_Monthly_2022'
 
 print("\nThis script was built for Santropol Roulant and will log onto the Sous-Chef website and scrape meal data for the latest month.")
-print("Source code for the file can be found on github at: https://github.com/zack-tan/sroulant-sc_scraper-airtable-link")
+print("It will then write that data into Airtable")
+print("\nSource code for the file can be found on github at: https://github.com/zack-tan/sroulant-sc_scraper-airtable-link")
 
 input("\nPlease ensure you are logging in from the roulant or connected to the organization's VPN before continuing. Press Enter to continue.")
 
@@ -202,16 +203,16 @@ if __name__ == '__main__':
 
     # Export out to csv for further processing
     df.to_csv(f"{month}_cleaned.csv",index=False)
-    print(f"Data processed. File output: {month}_cleaned.csv.")
+    print(f"Data processed. Output to file: {month}_cleaned.csv.")
     
 
     ### CONNECT AND WRITE TO AIRTABLE
-    print("\nNow printing to Airtable...")
+    print("\nNow writing to Airtable...")
 
     print(f"\nPaste Base ID to use and hit Enter. For more information, refer to: https://support.airtable.com/hc/en-us/articles/4405741487383-Understanding-Airtable-IDs")
     base_id = input(fr"Alternatively, leave blank to use default '{BASE_NAME}': ")
     
-    table_name = input(f"\nPlease specify table containing monthly client meal data. Leave blank to use default '{TABLE_NAME}': ")
+    table_name = input(f"\nPlease specify the NAME of the table containing monthly client meal data. Leave blank to use default '{TABLE_NAME}': ")
 
     if base_id == '':
         base_id = BASE_ID
