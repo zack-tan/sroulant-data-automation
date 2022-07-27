@@ -1,12 +1,11 @@
 """ Airtable Client Aggregate Table Update script
-Developed by Zack Tan (https://bit.ly/github-zack) for Santropol Roulant
+Developed by Zack Tan (https://bit.ly/linkedin-zacktan) for Santropol Roulant
 
 This script updates the client-level aggregated table in Sous-Chef 
 """
-from pyairtable import Api, Base, Table
-from pyairtable import formulas as fm
-import pandas as pd
+from pyairtable import Table
 from collections import defaultdict
+import sys
 
 API_KEY = 'xx'
 BASE_ID = 'xx'
@@ -22,7 +21,7 @@ if __name__ == '__main__':
     base_id = input(fr"Alternatively, leave blank to use default '{BASE_NAME}': ")
     
     table_name_agg = input(f"\nPlease specify the NAME of the table containing client-level aggregated meal data. Leave blank to use default '{TABLE_NAME_AGG}': ")
-    table_name_monthly = input("\nPlease specify the NAME of the table containing month-level client meal data (used for tallying). \ "
+    table_name_monthly = input("\nPlease specify the NAME of the table containing month-level client meal data (this is used for tallying names). \ "
                                 f"Leave blank to use default '{TABLE_NAME_MONTHLY}': ")
 
     if base_id == '':
@@ -38,16 +37,21 @@ if __name__ == '__main__':
     table = Table(API_KEY, BASE_ID, table_name_monthly)
     table_agg = Table(API_KEY, base_id, table_name_agg)
 
+    # Retrieve all entries from client_count_monthly and aggregation table
+    try:
+        table_rows = table.all()
+        aggregation_rows = table_agg.all()
+    except:
+        print(f"\nUnable to connect to specified tables. Please check the provided table names again and re-run this script after verifying.")
+        input("Press Enter to finish.")
+        sys.exit()
+
+
     print("\nSuccessfully connected.\n")
 
 
-    
 
     ### TALLY AGAINST CLIENT_COUNT_MONTHLY TO CHECK IF NEW RECORDS EXIST (i.e. new clients)
-
-    # Retrieve all entries from client_count_monthly and aggregation table
-    table_rows = table.all()
-    aggregation_rows = table_agg.all()
 
     # Store month-by-month data into a defaultdict - {name : [corresponding airtable_record_IDs]} 
     name_id_dict = defaultdict(list)
@@ -72,21 +76,34 @@ if __name__ == '__main__':
 
     # for n in missing_names:
     #     table_agg.create({ 'Name': n, 'Update': False })
-    [table_agg.create({ 'Name': n, 'Update': False}) for n in missing_names]
-    
+    try:
+        [table_agg.create({ 'Name': n, 'Update': False}) for n in missing_names]
+    except:
+        print("Unable to write new records into Client_Aggregates. Please check that required columns exist and are of the correct type:")
+        print("'Name' of type Single line text.")
+        print("'Update' of type Checkbox.")
+        input("\nRun this script again after verifying. Press Enter to finish.")
+        sys.exit()
 
     # Recollect the total number of rows in aggregated table and store Airtable IDs of retrieved records
     aggregation_rows = table_agg.all()
     records = [r.get('id') for r in aggregation_rows]
     
     # Refresh all records - Works with an automation built within Airtable
-    for i, r in enumerate(records):
-        # Uncheck all Update boxes and clear lookup records
-        table_agg.update(record_id = r, fields = {'Update': False, 'Lookup': ''})
+    try:
+        for i, r in enumerate(records):
+            # Uncheck all Update boxes and clear lookup records
+            table_agg.update(record_id = r, fields = {'Update': False, 'Lookup': ''})
 
-        # Check all Update boxes to activate automation
-        table_agg.update(record_id = r, fields = {'Update': True})
-        
-        print(f"Refreshed {i+1} out of {len(records)} entries.")
+            # Check all Update boxes to activate automation
+            table_agg.update(record_id = r, fields = {'Update': True})
+            
+            print(f"Refreshed {i+1} out of {len(records)} entries.")
+
+        input("Operation completed. Press Enter to finish.")
+    except:
+        print("Unable to refresh records. Please check that column names match and are of the correct type:")
+        print("'Update' of type Checkbox.")
+        print("'Lookup' of type Linked Field (multiple).")
+        print("\nRun this script again after verifying.")
     
-    input("Operation completed. Press Enter to finish.")
