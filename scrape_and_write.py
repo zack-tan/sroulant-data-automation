@@ -12,24 +12,23 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.chrome.options import Options
 from collections import defaultdict
-from pyairtable import Api, Base, Table
-from pyairtable import formulas as fm
+from pyairtable import Table
 import pandas as pd
+import sys
 
 # Initialization
 BASE_URL = r"https://sous-chef.office.santropolroulant.org/p/login?next=/"
 USERNAME_SC = r'xx'
 PASSWORD_SC = r'xx'
-month = r'-'
 
 API_KEY = r'xx'
 BASE_ID = r'xx'
 BASE_NAME = r'(McGill) 2022 Clients data and meals data'
 TABLE_NAME = r'Client_Count_Monthly_2022'
 
-print("\nThis script was built for Santropol Roulant and will log onto the Sous-Chef website and scrape meal data for the latest month.")
+print("\nThis script was built for Santropol Roulant and will log onto the Sous-Chef website to scrape meal data for the latest month.")
 print("It will then write that data into Airtable")
-print("\nSource code for the file can be found on github at: https://github.com/zack-tan/sroulant-sc_scraper-airtable-link")
+print("\nSource code for the file can be found on github at: https://bit.ly/sroulant-automation")
 
 input("\nPlease ensure you are logging in from the roulant or connected to the organization's VPN before continuing. Press Enter to continue.")
 
@@ -57,11 +56,7 @@ if __name__ == '__main__':
     passbox.send_keys(PASSWORD_SC)
 
     # Click login
-    #login = driver.find_element_by_class_name(r"ui fluid large yellow button").click()
-    #x = driver.find_elements_by_xpath(r"(//button[@class='ui fluid large yellow button'])")
-    #x[0].click()
     driver.find_elements_by_xpath(r"(//a[@href='/billing/list/'])")
-    #driver.find_element_by_name("Value").send_keys(Keys.RETURN)
     actions = ActionChains(driver)
     actions.send_keys(Keys.RETURN)
     actions.perform()
@@ -73,11 +68,6 @@ if __name__ == '__main__':
     billing_icons = driver.find_elements_by_xpath(r"(//a[@href='/billing/list/'])")
     billing_icons[1].click()            # Need to use the 2nd element. 1st is unaccessible for some reason
     
-    # //a[contains (@title,'公司债券') and not(contains(@title,'短期')) ]
-    # //a[contains (@class,'btnX') and .//text()='Sign in']
-    # //a[contains (@href, '/billing/view/')]
-    # //a[contains (@href, '/billing/view/')] - Works
-    
     '''
     Oldest month is November 2017. List of WebElements returned is in opposite order:
     - x[0] is the latest month. Need to think of a way to reverse the order
@@ -85,8 +75,6 @@ if __name__ == '__main__':
     '''
 
     ### BILLING SUMMARY PAGE
-
-    # TODO: Some kind of wait for load
 
     # Returns all clickable 'view' eyeball links that open the invoices
     x = driver.find_elements_by_xpath(r"//a[contains (@href, '/billing/view/')]")
@@ -100,25 +88,7 @@ if __name__ == '__main__':
 
     # Use latest month
     x[0].click()
-    
-    '''
-    # take month and year input from user
-    # combine into str
-    # search in dict
-    # click corresponding link
-    res = {y[i]: x[i] for i in range(len(y))}
-    
-    # TODO: Reverse both lists to allow for easier estimation
-    x.reverse()
-    y.reverse()
-    
-    # To take in input in form of "xxx yyyy" where xxx is month and yyyy is year
-    offset = -1
-    if month == 'dec':
-        pass
-    elif month == 'jan':
-        pass
-    '''
+
 
     ### INDIVIDUAL MONTH BILLING PAGE
 
@@ -161,8 +131,6 @@ if __name__ == '__main__':
         
         client_info['name'].append(cells[1].text)
         client_info['delivery_status'].append(cells[2].text)
-        # client_info.setdefault('name').append(cells[1].text)
-        # client_info.setdefault('delivery_status').append(cells[2].text)
         client_info['payment_method'].append(cells[3].text)
         client_info['price_scale'].append(cells[4].text)
         client_info['n_orders'].append(cells[5].text)
@@ -188,8 +156,7 @@ if __name__ == '__main__':
     df['meals_large'] = df['meals_large'].replace('', 0)
     df['meals_extra'] = df['meals_extra'].replace('', 0)
 
-    # 2 methods to remove dollar sign from total - then convert to float type
-    #df['total'] = df['total'].apply(lambda x: x[1:]) 
+    # Remove dollar sign from total - then convert to float type
     df['total'] = df['total'].str[1:]
     
     df['total'] = df['total'].astype(float)
@@ -223,15 +190,29 @@ if __name__ == '__main__':
 
     table = Table(API_KEY, base_id, table_name)
 
+    try:
+        table.all()
+    except:
+        print(f"\nUnable to connect to {table_name}. Please check that the correct table name has been given and re-run this script after verifying.")
+        input("Press Enter to finish.")
+        sys.exit()
+
     print("\nSuccessfully connected.\nWriting to table...\n")
 
-    for i, row in df.iterrows():
-        table.create({ 'CLIENT NAME': row['name'], 'MONTH': row['month'], 'Delivery status': row['delivery_status'], 'Price scale': row['price_scale'],
-                        'Number of orders': row['n_orders'], 'Meals reg': row['meals_reg'], 'Meals large': row['meals_large'], 
-                        'Extra': row['meals_large'], 'Montant facture': row['total']
-        })
+    try:
+        for i, row in df.iterrows():
+            table.create({ 'CLIENT NAME': row['name'], 'MONTH': row['month'], 'Delivery status': row['delivery_status'], 'Price scale': row['price_scale'],
+                            'Number of orders': row['n_orders'], 'Meals reg': row['meals_reg'], 'Meals large': row['meals_large'], 
+                            'Extra': row['meals_large'], 'Montant facture': row['total']
+            })
 
-        print(f"Wrote {i+1} out of {len(df)} records")
+            print(f"Wrote {i+1} out of {len(df)} records")
+    except:
+        print(f"Unable to write new records into {table_name}. Please check that the required columns exist and are of the correct type:")
+        print("'CLIENT NAME' of type Single line text.")
+        input("\nRun this script again after verifying. Press Enter to finish.")
+        sys.exit()
 
-    print("\nFinished writing to Airtable. If you wish to refresh the client aggregate table, please run the other script XXXXX.")
+
+    print("\nFinished writing to Airtable. If you wish to refresh the client aggregate table, please run the other script 'airtable_aggregate_update.exe'.")
     input("Press Enter to finish.")

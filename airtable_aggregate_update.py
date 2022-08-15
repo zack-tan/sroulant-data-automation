@@ -15,13 +15,13 @@ TABLE_NAME_MONTHLY = r'Client_Count_Monthly_2022'
 
 if __name__ == '__main__':
     print("\nThis script was built for Santropol Roulant and will refresh the client-level meal aggregate table on Airtable.")
-    print("\nSource code for the file can be found on github at: https://github.com/zack-tan/sroulant-sc_scraper-airtable-link")
+    print("\nSource code for the file can be found on github at: https://bit.ly/sroulant-automation")
 
     print(f"\nPaste Base ID to use and hit Enter. For more information, refer to: https://support.airtable.com/hc/en-us/articles/4405741487383-Understanding-Airtable-IDs")
     base_id = input(fr"Alternatively, leave blank to use default '{BASE_NAME}': ")
     
     table_name_agg = input(f"\nPlease specify the NAME of the table containing client-level aggregated meal data. Leave blank to use default '{TABLE_NAME_AGG}': ")
-    table_name_monthly = input("\nPlease specify the NAME of the table containing month-level client meal data (this is used for tallying names). \ "
+    table_name_monthly = input("\nPlease specify the NAME of the table containing month-level client meal data (this is used for tallying names). " \
                                 f"Leave blank to use default '{TABLE_NAME_MONTHLY}': ")
 
     if base_id == '':
@@ -45,7 +45,6 @@ if __name__ == '__main__':
         print(f"\nUnable to connect to specified tables. Please check the provided table names again and re-run this script after verifying.")
         input("Press Enter to finish.")
         sys.exit()
-
 
     print("\nSuccessfully connected.\n")
 
@@ -74,12 +73,10 @@ if __name__ == '__main__':
     # Add missing records into aggregate table
     missing_names = list(name_id_missing.keys())
 
-    # for n in missing_names:
-    #     table_agg.create({ 'Name': n, 'Update': False })
     try:
         [table_agg.create({ 'Name': n, 'Update': False}) for n in missing_names]
     except:
-        print("Unable to write new records into Client_Aggregates. Please check that required columns exist and are of the correct type:")
+        print(f"Unable to write new records into {table_name_agg}. Please check that required columns exist and are of the correct type:")
         print("'Name' of type Single line text.")
         print("'Update' of type Checkbox.")
         input("\nRun this script again after verifying. Press Enter to finish.")
