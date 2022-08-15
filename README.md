@@ -4,8 +4,6 @@ This project was done in conjunction with [Santropol Roulant](https://santropolr
 
 Each script features detailed comments that explain execution logic.
 
-<br>
-
 ### [scrape_and_write.py](https://github.com/zack-tan/sroulant-data-automation/blob/main/scrape_and_write.py)
 
 This script scrapes data from Sous-Chef, then writes the same into Airtable (with the corresponding month label).
@@ -22,7 +20,7 @@ This script refreshes client-level aggregated meal data (YTD), working in tandem
 
 Simply run *scrape_and_write.py* followed by *airtable_aggregate_update.py*. Each script features prompts that explain each step of the process to users. 
 
-<br><hr>
+<hr>
 
 ### Other information
 - The *pyinstaller* library was used to compile scripts into a .exe file.
