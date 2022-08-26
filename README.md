@@ -1,18 +1,23 @@
-# Web Scraping and Airtable Integration (Write and Update)
+# Automated data collection through Web Scraping and Airtable Integration
 
-This project was done in conjunction with [Santropol Roulant](https://santropolroulant.org/) and features 2 executable scripts that scrape data from [Sous-Chef](https://github.com/savoirfairelinux/sous-chef), the Roulant's proprietary Web Platform, then writes to its corresponding database hosted on Airtable.
+This project was done in conjunction with [Santropol Roulant](https://santropolroulant.org/) and features 2 scripts that scrape data from [Sous-Chef](https://github.com/savoirfairelinux/sous-chef), the Roulant's proprietary Web Platform, cleans and transforms it, then writes to an Airtable database.
 
-Each script features detailed comments that explain execution logic.
+Each script is written to be interactive and user-friendly, featuring several prompts with error handling. These have been compiled and distributed as .exe files through the use of the *pyinstaller* library.
 
 ### [scrape_and_write.py](https://github.com/zack-tan/sroulant-data-automation/blob/main/scrape_and_write.py)
 
-This script scrapes data from Sous-Chef, then writes the same into Airtable (with the corresponding month label).
+This script scrapes meal order data from Sous-Chef then writes it into Airtable.
 
 ### [airtable_aggregate_update.py](https://github.com/zack-tan/sroulant-data-automation/blob/main/airtable_aggregate_update.py) 
 
-This script refreshes client-level aggregated meal data (YTD), working in tandem with an Airtable Automation to do so. Detailed comments are present in the script - high-level steps taken include:
-- Ensuring all client names are present in aggregate table
+This script refreshes client-level aggregated meal order data (YTD), working in tandem with an Airtable Automation to do so. <br>
+
+High-level steps taken include:
+- Ensuring client names tally across all tables within Airtable
 - Refreshing lookup fields between client- and month-level aggregate tables
+
+<br>
+All scripts include detailed comments that explain execution logic.
 
 <br>
 

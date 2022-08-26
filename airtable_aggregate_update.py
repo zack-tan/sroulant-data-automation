@@ -5,37 +5,62 @@ This script updates the client-level aggregated table in Sous-Chef
 """
 from pyairtable import Table
 from collections import defaultdict
+from typing import Dict
 import sys
 
-API_KEY = 'xx'
-BASE_ID = 'xx'
-BASE_NAME = r'(McGill) 2022 Clients data and meals data'
-TABLE_NAME_AGG = r'Client_Aggregates'
-TABLE_NAME_MONTHLY = r'Client_Count_Monthly_2022'
+CREDENTIALS_FILE = 'credentials.txt'
+
+''' 
+Reads a text file and stores credentials for Sous-chef & Airtable as a dict to be used later.
+
+Params:
+    cred_file - a text file of credentials, separated by newline and in the format <param>=<value>
+
+Returns: A dict with format - { 'parameter' : 'value' }
+'''
+def read_credentials(cred_file) -> Dict[str, str]:
+    return_dict = {}
+    try:
+        with open(cred_file, mode = 'r', encoding = "utf8") as credentials:
+            while True:
+                return_dict['BASE_URL'] = credentials.readline().split("=",1)[1].rstrip().lstrip()
+                return_dict['USERNAME_SC'] = credentials.readline().split("=",1)[1].rstrip().lstrip()
+                return_dict['PASSWORD_SC'] = credentials.readline().split("=",1)[1].rstrip().lstrip()
+                return_dict['API_KEY'] = credentials.readline().split("=",1)[1].rstrip().lstrip()
+                return_dict['BASE_ID'] = credentials.readline().split("=",1)[1].rstrip().lstrip()
+                return_dict['BASE_NAME'] = credentials.readline().split("=",1)[1].rstrip().lstrip()
+                return_dict['TABLE_NAME_AGG'] = credentials.readline().split("=",1)[1].rstrip().lstrip()
+                return_dict['TABLE_NAME_MONTHLY'] = credentials.readline().split("=",1)[1].rstrip().lstrip()
+
+                credentials.close()
+                
+                return return_dict
+    except FileNotFoundError:
+        print(f"Credentials file not found! Please check that 'credentials.txt' is located in the same folder as this script then run again.")
+        return
 
 if __name__ == '__main__':
     print("\nThis script was built for Santropol Roulant and will refresh the client-level meal aggregate table on Airtable.")
-    print("\nSource code for the file can be found on github at: https://bit.ly/sroulant-automation")
+    print("\nSource code can be found on github at: https://bit.ly/sroulant-automation")
 
-    print(f"\nPaste Base ID to use and hit Enter. For more information, refer to: https://support.airtable.com/hc/en-us/articles/4405741487383-Understanding-Airtable-IDs")
-    base_id = input(fr"Alternatively, leave blank to use default '{BASE_NAME}': ")
-    
-    table_name_agg = input(f"\nPlease specify the NAME of the table containing client-level aggregated meal data. Leave blank to use default '{TABLE_NAME_AGG}': ")
-    table_name_monthly = input("\nPlease specify the NAME of the table containing month-level client meal data (this is used for tallying names). " \
-                                f"Leave blank to use default '{TABLE_NAME_MONTHLY}': ")
+    input("\nPlease ensure the credentials file 'credentials.txt' is updated and stored in the same directory as this script. More info can be found on Github.\nPress Enter to continue.")
 
-    if base_id == '':
-        base_id = BASE_ID
-    if table_name_agg == '':
-        table_name_agg = TABLE_NAME_AGG
-    if table_name_monthly == '':
-        table_name_monthly = TABLE_NAME_MONTHLY
+    creds = read_credentials()
+    if not creds:
+        input("Press Enter to finish.")
+        sys.exit()
 
-    print(f"\nConnecting to tables {table_name_agg} and {table_name_monthly} on Base ID {base_id} @ Airtable...")
+    API_KEY = creds['API_KEY']
+    BASE_ID = creds['BASE_ID']
+    BASE_NAME = r'(McGill) 2022 Clients data and meals data' if not creds['BASE_NAME'] else creds['BASE_NAME']
+    TABLE_NAME_AGG = r'Client_Aggregates' if not creds['TABLE_NAME_AGG'] else creds['TABLE_NAME_AGG']
+    TABLE_NAME_MONTHLY = r'Client_Count_Monthly_2022' if not creds['TABLE_NAME_MONTHLY'] else creds['TABLE_NAME_MONTHLY']
+
+    print(f"\nConnecting to tables {TABLE_NAME_AGG} and {TABLE_NAME_MONTHLY} on Base ID {BASE_ID} @ Airtable...")
 
     # Initialize Airtable API connector
-    table = Table(API_KEY, BASE_ID, table_name_monthly)
-    table_agg = Table(API_KEY, base_id, table_name_agg)
+    table = Table(API_KEY, BASE_ID, TABLE_NAME_MONTHLY)
+    table_agg = Table(API_KEY, BASE_ID, TABLE_NAME_AGG)
 
     # Retrieve all entries from client_count_monthly and aggregation table
     try:
@@ -76,7 +101,7 @@ if __name__ == '__main__':
     try:
         [table_agg.create({ 'Name': n, 'Update': False}) for n in missing_names]
     except:
-        print(f"Unable to write new records into {table_name_agg}. Please check that required columns exist and are of the correct type:")
+        print(f"Unable to write new records into {TABLE_NAME_AGG}. Please check that required columns exist and are of the correct type:")
         print("'Name' of type Single line text.")
         print("'Update' of type Checkbox.")
         input("\nRun this script again after verifying. Press Enter to finish.")

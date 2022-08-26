@@ -13,24 +13,49 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.chrome.options import Options
 from collections import defaultdict
 from pyairtable import Table
+from typing import Dict
+from selenium.common.exceptions import WebDriverException
 import pandas as pd
 import sys
 
 # Initialization
-BASE_URL = r"https://sous-chef.office.santropolroulant.org/p/login?next=/"
-USERNAME_SC = r'xx'
-PASSWORD_SC = r'xx'
+CREDENTIALS_FILE = "credentials.txt"
 
-API_KEY = r'xx'
-BASE_ID = r'xx'
-BASE_NAME = r'(McGill) 2022 Clients data and meals data'
-TABLE_NAME = r'Client_Count_Monthly_2022'
-
-print("\nThis script was built for Santropol Roulant and will log onto the Sous-Chef website to scrape meal data for the latest month.")
-print("It will then write that data into Airtable")
+print("\nThis script was built for Santropol Roulant and will log onto the Sous-Chef website to scrape meal data for the latest month, before writing the same into Airtable")
 print("\nSource code for the file can be found on github at: https://bit.ly/sroulant-automation")
 
-input("\nPlease ensure you are logging in from the roulant or connected to the organization's VPN before continuing. Press Enter to continue.")
+print("\nPlease ensure the following:\n- You are logging in from the roulant or connected to the organization's VPN.\n- the file 'credentials.txt' is updated and located in the same directory as this script.")
+input("Press Enter to continue.")
+
+''' 
+Reads a text file and stores credentials for Sous-chef & Airtable as a dict to be used later.
+
+Params:
+    cred_file - a text file of credentials, separated by newline and in the format <param>=<value>
+
+Returns: A dict with format - { 'parameter' : 'value' }
+'''
+def read_credentials(cred_file) -> Dict[str, str]:
+    return_dict = {}
+    try:
+        with open(cred_file, mode = 'r', encoding = "utf8") as credentials:
+            while True:
+                return_dict['BASE_URL'] = credentials.readline().split("=",1)[1].rstrip().lstrip()
+                return_dict['USERNAME_SC'] = credentials.readline().split("=",1)[1].rstrip().lstrip()
+                return_dict['PASSWORD_SC'] = credentials.readline().split("=",1)[1].rstrip().lstrip()
+                return_dict['API_KEY'] = credentials.readline().split("=",1)[1].rstrip().lstrip()
+                return_dict['BASE_ID'] = credentials.readline().split("=",1)[1].rstrip().lstrip()
+                return_dict['BASE_NAME'] = credentials.readline().split("=",1)[1].rstrip().lstrip()
+                return_dict['TABLE_NAME_AGG'] = credentials.readline().split("=",1)[1].rstrip().lstrip()
+                return_dict['TABLE_NAME_MONTHLY'] = credentials.readline().split("=",1)[1].rstrip().lstrip()
+
+                credentials.close()
+                
+                return return_dict
+    except FileNotFoundError:
+        print(f"Credentials file not found! Please check that 'credentials.txt' is located in the same folder as this script then run again.")
+        return
+
 
 # Get WebDriver and start maximized
 options = Options()
@@ -40,7 +65,29 @@ driver = webdriver.Chrome(r'C:\Users\tanzc\chromedriver.exe', chrome_options=opt
 
 if __name__ == '__main__':
 
-    driver.get(BASE_URL)
+    creds = read_credentials(CREDENTIALS_FILE)
+
+    if not creds:
+        print(f"Credentials file not found! Please check that 'credentials.txt' is located in the same folder as this script then run again.")
+        input("Press Enter to finish.")
+        sys.exit()
+
+    BASE_URL = r"https://sous-chef.office.santropolroulant.org/p/login?next=/" if not creds['BASE_URL'] else creds['BASE_URL']
+    USERNAME_SC = creds['USERNAME_SC']
+    PASSWORD_SC = creds['PASSWORD_SC']
+
+    API_KEY = creds['API_KEY']
+    BASE_ID = creds['BASE_ID']
+    BASE_NAME = r'(McGill) 2022 Clients data and meals data' if not creds['BASE_NAME'] else creds['BASE_NAME']
+    TABLE_NAME = r'Client_Count_Monthly_2022' if not creds['TABLE_NAME_MONTHLY'] else creds['TABLE_NAME_MONTHLY']
+    
+    try:
+        driver.get(BASE_URL)
+    except WebDriverException:
+        print(f"\nUnable to connect to Sous-chef. Please ensure you're connected to the VPN then re-run this script.")
+        input("Press Enter to finish.")
+        sys.exit()
+
     
     WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, r"id_username")))
 
@@ -176,24 +223,24 @@ if __name__ == '__main__':
     ### CONNECT AND WRITE TO AIRTABLE
     print("\nNow writing to Airtable...")
 
-    print(f"\nPaste Base ID to use and hit Enter. For more information, refer to: https://support.airtable.com/hc/en-us/articles/4405741487383-Understanding-Airtable-IDs")
-    base_id = input(fr"Alternatively, leave blank to use default '{BASE_NAME}': ")
+    # print(f"\nPaste Base ID to use and hit Enter. For more information, refer to: https://support.airtable.com/hc/en-us/articles/4405741487383-Understanding-Airtable-IDs")
+    # base_id = input(fr"Alternatively, leave blank to use default '{BASE_NAME}': ")
     
-    table_name = input(f"\nPlease specify the NAME of the table containing monthly client meal data. Leave blank to use default '{TABLE_NAME}': ")
+    # table_name = input(f"\nPlease specify the NAME of the table containing monthly client meal data. Leave blank to use default '{TABLE_NAME}': ")
 
-    if base_id == '':
-        base_id = BASE_ID
-    if table_name == '':
-        table_name = TABLE_NAME
+    # if base_id == '':
+    #     base_id = BASE_ID
+    # if table_name == '':
+    #     table_name = TABLE_NAME
 
-    print(f"\nConnecting to table {table_name} on Base ID {base_id} @ Airtable...")
+    print(f"\nConnecting to table {TABLE_NAME} on Base ID {BASE_ID} @ Airtable...")
 
-    table = Table(API_KEY, base_id, table_name)
+    table = Table(API_KEY, BASE_ID, TABLE_NAME)
 
     try:
         table.all()
     except:
-        print(f"\nUnable to connect to {table_name}. Please check that the correct table name has been given and re-run this script after verifying.")
+        print(f"\nUnable to connect to {TABLE_NAME}. Please check that the correct table name has been given and re-run this script after verifying.")
         input("Press Enter to finish.")
         sys.exit()
 
