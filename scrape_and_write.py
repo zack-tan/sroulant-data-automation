@@ -25,7 +25,7 @@ print("\nThis script was built for Santropol Roulant and will log onto the Sous-
 print("\nSource code for the file can be found on github at: https://bit.ly/sroulant-automation")
 
 print("\nPlease ensure the following:\n- You are logging in from the roulant or connected to the organization's VPN.\n- the file 'credentials.txt' is updated and located in the same directory as this script.")
-input("Press Enter to continue.")
+input("\nPress Enter to continue.")
 
 ''' 
 Reads a text file and stores credentials for Sous-chef & Airtable as a dict to be used later.
@@ -53,13 +53,15 @@ def read_credentials(cred_file) -> Dict[str, str]:
                 
                 return return_dict
     except FileNotFoundError:
-        print(f"Credentials file not found! Please check that 'credentials.txt' is located in the same folder as this script then run again.")
+        print(f"\nCredentials file not found! Please check that 'credentials.txt' is located in the same folder as this script then run again.")
         return
 
 
 # Get WebDriver and start maximized
 options = Options()
 options.add_argument("--start-maximized")
+#options.add_argument("--log-level=3")
+#options.add_experimental_option("excludeSwitches", ["enable-logging"])
 
 driver = webdriver.Chrome(r'C:\Users\tanzc\chromedriver.exe', chrome_options=options)
 
@@ -68,8 +70,8 @@ if __name__ == '__main__':
     creds = read_credentials(CREDENTIALS_FILE)
 
     if not creds:
-        print(f"Credentials file not found! Please check that 'credentials.txt' is located in the same folder as this script then run again.")
-        input("Press Enter to finish.")
+        print(f"\nCredentials file not found! Please check that 'credentials.txt' is located in the same folder as this script then run again.")
+        input("\nPress Enter to finish")
         sys.exit()
 
     BASE_URL = r"https://sous-chef.office.santropolroulant.org/p/login?next=/" if not creds['BASE_URL'] else creds['BASE_URL']
@@ -85,7 +87,7 @@ if __name__ == '__main__':
         driver.get(BASE_URL)
     except WebDriverException:
         print(f"\nUnable to connect to Sous-chef. Please ensure you're connected to the VPN then re-run this script.")
-        input("Press Enter to finish.")
+        input("\nPress Enter to finish")
         sys.exit()
 
     
@@ -217,31 +219,21 @@ if __name__ == '__main__':
 
     # Export out to csv for further processing
     df.to_csv(f"{month}_cleaned.csv",index=False)
-    print(f"Data processed. Output to file: {month}_cleaned.csv.")
+    print(f"Data processed and backed up to file: {month}_cleaned.csv.")
     
 
     ### CONNECT AND WRITE TO AIRTABLE
     print("\nNow writing to Airtable...")
 
-    # print(f"\nPaste Base ID to use and hit Enter. For more information, refer to: https://support.airtable.com/hc/en-us/articles/4405741487383-Understanding-Airtable-IDs")
-    # base_id = input(fr"Alternatively, leave blank to use default '{BASE_NAME}': ")
-    
-    # table_name = input(f"\nPlease specify the NAME of the table containing monthly client meal data. Leave blank to use default '{TABLE_NAME}': ")
-
-    # if base_id == '':
-    #     base_id = BASE_ID
-    # if table_name == '':
-    #     table_name = TABLE_NAME
-
-    print(f"\nConnecting to table {TABLE_NAME} on Base ID {BASE_ID} @ Airtable...")
+    print(f"Connecting to table {TABLE_NAME} on Base ID {BASE_ID} @ Airtable...")
 
     table = Table(API_KEY, BASE_ID, TABLE_NAME)
 
     try:
         table.all()
     except:
-        print(f"\nUnable to connect to {TABLE_NAME}. Please check that the correct table name has been given and re-run this script after verifying.")
-        input("Press Enter to finish.")
+        print(f"\nUnable to connect to {TABLE_NAME}. Please check that the correct API Key, Base ID, and table name have been provided then re-run this script after verifying.")
+        input("\nPress Enter to finish")
         sys.exit()
 
     print("\nSuccessfully connected.\nWriting to table...\n")
@@ -255,11 +247,19 @@ if __name__ == '__main__':
 
             print(f"Wrote {i+1} out of {len(df)} records")
     except:
-        print(f"Unable to write new records into {table_name}. Please check that the required columns exist and are of the correct type:")
-        print("'CLIENT NAME' of type Single line text.")
-        input("\nRun this script again after verifying. Press Enter to finish.")
+        print(f"Unable to write new records into {TABLE_NAME}. Please check that the required columns exist and are of the correct type:")
+        print("- 'CLIENT NAME' of type Single line text.")
+        print("- 'MONTH' of type Single select.")
+        print("- 'Delivery status' of type Single select.")
+        print("- 'Price scale' of type Single select.")
+        print("- 'Number of orders' of type Number.")
+        print("- 'Meals reg' of type Number.")
+        print("- 'Meals large' of type Number.")
+        print("- 'Extra' of type Number.")
+        print("- 'Montant facture' of type Currency.")
+        input("\nRun this script again after verifying these. Press Enter to finish")
         sys.exit()
 
 
     print("\nFinished writing to Airtable. If you wish to refresh the client aggregate table, please run the other script 'airtable_aggregate_update.exe'.")
-    input("Press Enter to finish.")
+    input("Press Enter to finish")

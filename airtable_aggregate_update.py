@@ -36,7 +36,7 @@ def read_credentials(cred_file) -> Dict[str, str]:
                 
                 return return_dict
     except FileNotFoundError:
-        print(f"Credentials file not found! Please check that 'credentials.txt' is located in the same folder as this script then run again.")
+        print(f"\nCredentials file not found! Please check that 'credentials.txt' is located in the same folder as this script then run again.")
         return
 
 if __name__ == '__main__':
@@ -45,9 +45,9 @@ if __name__ == '__main__':
 
     input("\nPlease ensure the credentials file 'credentials.txt' is updated and stored in the same directory as this script. More info can be found on Github.\nPress Enter to continue.")
 
-    creds = read_credentials()
+    creds = read_credentials(CREDENTIALS_FILE)
     if not creds:
-        input("Press Enter to finish.")
+        input("\nPress Enter to finish")
         sys.exit()
 
     API_KEY = creds['API_KEY']
@@ -67,8 +67,8 @@ if __name__ == '__main__':
         table_rows = table.all()
         aggregation_rows = table_agg.all()
     except:
-        print(f"\nUnable to connect to specified tables. Please check the provided table names again and re-run this script after verifying.")
-        input("Press Enter to finish.")
+        print(f"\nUnable to connect to specified tables. Please check the provided API key, Base ID, and table names again then re-run this script after verifying.")
+        input("\nPress Enter to finish")
         sys.exit()
 
     print("\nSuccessfully connected.\n")
@@ -104,7 +104,7 @@ if __name__ == '__main__':
         print(f"Unable to write new records into {TABLE_NAME_AGG}. Please check that required columns exist and are of the correct type:")
         print("'Name' of type Single line text.")
         print("'Update' of type Checkbox.")
-        input("\nRun this script again after verifying. Press Enter to finish.")
+        input("\nRun this script again after verifying. Press Enter to finish")
         sys.exit()
 
     # Recollect the total number of rows in aggregated table and store Airtable IDs of retrieved records
@@ -122,7 +122,7 @@ if __name__ == '__main__':
             
             print(f"Refreshed {i+1} out of {len(records)} entries.")
 
-        input("Operation completed. Press Enter to finish.")
+        input("\nOperation completed. Press Enter to finish")
     except:
         print("Unable to refresh records. Please check that column names match and are of the correct type:")
         print("'Update' of type Checkbox.")
