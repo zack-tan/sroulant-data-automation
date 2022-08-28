@@ -6,8 +6,6 @@ It features 2 scripts that scrape data from [Sous-Chef](https://github.com/savoi
 
 Each script is written to be interactive and user-friendly, featuring several prompts with error handling. These have been compiled and distributed as .exe files through the use of the [pyinstaller](https://pyinstaller.org/en/stable/) library.
 
-<hr>
-
 ## Codefiles
 
 ### [scrape_and_write.py](https://github.com/zack-tan/sroulant-data-automation/blob/main/scrape_and_write.py)
@@ -23,8 +21,6 @@ High-level steps taken include:
 - Refreshing lookup fields between client- and month-level aggregate tables
 
 *All scripts include comments within the code that explain execution logic in detail.*
-
-<hr>
 
 ## How to use
 
