@@ -2,7 +2,7 @@
 
 This project was done in collaboration with [Santropol Roulant](https://santropolroulant.org/) and helps improve the organization's data collection processes through automation via web scraping and integration with Airtable.
 
-It features 2 scripts that scrape data from [Sous-Chef](https://github.com/savoirfairelinux/sous-chef), the Roulant's proprietary Web Platform, then cleans and transforms the same before writing into the Airtable DB.
+It features 2 scripts that scrape data from [Sous-Chef](https://github.com/savoirfairelinux/sous-chef), the Roulant's proprietary Web Platform, then cleans and transforms the same. Data is stored into an Airtable DB to be used for Analytics.
 
 Each script is written to be interactive and user-friendly, featuring several prompts with error handling. These have been compiled and distributed as .exe files through use of the [pyinstaller](https://pyinstaller.org/en/stable/) library.
 
@@ -12,7 +12,7 @@ Each script is written to be interactive and user-friendly, featuring several pr
 
 ### [scrape_and_write.py](https://github.com/zack-tan/sroulant-data-automation/blob/main/scrape_and_write.py)
 
-This script scrapes meal order data (at month-level) from Sous-Chef, cleans the data, then writes this into the corresponding table in Airtable.
+This script scrapes meal order data (at month-level) from Sous-Chef, then cleans and formats it. Data is then stored into the corresponding month-level table within Airtable.
 
 ### [airtable_aggregate_update.py](https://github.com/zack-tan/sroulant-data-automation/blob/main/airtable_aggregate_update.py) 
 
